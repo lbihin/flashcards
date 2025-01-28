@@ -1,5 +1,6 @@
 import logging
 import os
+
 from sqlalchemy import (
     Column,
     Date,
@@ -10,8 +11,8 @@ from sqlalchemy import (
     create_engine,
     text,
 )
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy.exc import IntegrityError, OperationalError
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
 # Define the location of the database
 DATABASE_PATH = os.path.join(os.path.expanduser("~"), ".flashcards", "flashcards.db")
@@ -29,7 +30,7 @@ class Card(Base):
     id = Column(Integer, primary_key=True)
     question = Column(String)
     reponse = Column(String)
-    probabilite = Column(Float)
+    probabilite = Column(Float, min=0.1, max=1)
     id_theme = Column(Integer, ForeignKey("themes.id", ondelete="RESTRICT"))
 
     theme = relationship("Theme", back_populates="cards")
@@ -77,7 +78,7 @@ def init_db():
                 themes = [Theme(theme=theme) for theme in ["Math", "SQL", "Git"]]
                 session.add_all(themes)
                 session.commit()
-                
+
             except IntegrityError as e:
                 session.rollback()
                 logging.error(
