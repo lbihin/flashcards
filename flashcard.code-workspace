@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../flashcards-app"
+		}
+	],
+	"settings": {
+		"jupyter.interactiveWindow.textEditor.executeSelection": true,
+	}
+}
