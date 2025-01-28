@@ -1,10 +1,56 @@
-import contextlib
 import logging
 import os
-import sqlite3
+from sqlalchemy import (
+    Column,
+    Date,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    create_engine,
+    text,
+)
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from sqlalchemy.exc import IntegrityError, OperationalError
 
 # Define the location of the database
 DATABASE_PATH = os.path.join(os.path.expanduser("~"), ".flashcards", "flashcards.db")
+
+# Define the engine
+engine = create_engine(f"sqlite:///{DATABASE_PATH}", echo=True)
+
+Base = declarative_base()
+
+
+# Define the tables
+class Card(Base):
+    __tablename__ = "cards"
+
+    id = Column(Integer, primary_key=True)
+    question = Column(String)
+    reponse = Column(String)
+    probabilite = Column(Float)
+    id_theme = Column(Integer, ForeignKey("themes.id", ondelete="RESTRICT"))
+
+    theme = relationship("Theme", back_populates="cards")
+
+
+class Theme(Base):
+    __tablename__ = "themes"
+
+    id = Column(Integer, primary_key=True)
+    theme = Column(String, unique=True)
+
+    cards = relationship("Card", back_populates="theme")
+
+
+class Stat(Base):
+    __tablename__ = "stats"
+
+    id = Column(Integer, primary_key=True)
+    bonnes_reponses = Column(Integer)
+    mauvaises_reponses = Column(Integer)
+    date = Column(Date)
 
 
 def init_db():
@@ -13,45 +59,41 @@ def init_db():
     # Ensure the directory exists
     os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    c = conn.cursor()
-    c.execute("PRAGMA foreign_keys = ON;")
-
     try:
-        # Create the tables
-        tables = [
-            """CREATE TABLE cards
-            (id INTEGER PRIMARY KEY, 
-            question TEXT, 
-            reponse TEXT,
-            probabilite REAL,
-            id_theme INTEGER,
-            FOREIGN KEY(id_theme) REFERENCES themes(id)
-            );""",
-            """CREATE TABLE themes
-            (id INTEGER PRIMARY KEY,
-            theme TEXT UNIQUE
-            );""",
-            """CREATE TABLE stats
-            (id INTEGER PRIMARY KEY,
-            bonnes_reponses INTEGER,
-            mauvaises_reponses INTEGER,
-            date DATE
-            );""",
-        ]
-        with contextlib.suppress(sqlite3.OperationalError):
-            for table in tables:
-                c.execute(table)
+        # Connect to the database
+        with engine.connect() as conn:
+            # Enable foreign keys for SQLite
+            if conn.dialect.name == "sqlite":  # Only for SQLite
+                conn.execute(text("PRAGMA foreign_keys = ON;"))
 
-        # Insert predefined themes
-        themes = [("Math",), ("Science",), ("History",)]
-        c.executemany("INSERT INTO themes (theme) VALUES (?);", themes)
+            Base.metadata.create_all(conn)
 
-    except sqlite3.IntegrityError as e:
-        logging.warning(f"Integrity error occured: {e}")
-    except sqlite3.Error as e:
-        logging.error(f"Unexpected error occured: {e}")
+            # Create a Session
+            Session = sessionmaker(bind=engine)
+            session = Session()
 
-    finally:
-        conn.commit()
-        conn.close()
+            # Insert predefined themes
+            try:
+                themes = [Theme(theme=theme) for theme in ["Math", "SQL", "Git"]]
+                session.add_all(themes)
+                session.commit()
+                
+            except IntegrityError as e:
+                session.rollback()
+                logging.error(
+                    f"An error occured during the insertion of predefined themes: {e}"
+                )
+            except Exception as e:
+                session.rollback()
+                logging.error(
+                    f"An unexpected error occured during the insertion of predefined themes: {e}"
+                )
+            finally:
+                session.close()
+
+    except OperationalError as e:
+        logging.error(f"An error occured during table creation: {e}")
+    except Exception as e:
+        logging.error(
+            f"An unexpected error occured during database initialization: {e}"
+        )

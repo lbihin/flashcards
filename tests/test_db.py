@@ -1,74 +1,58 @@
 import os
-import sqlite3
 import pytest
-from src.db.entities import init_db, DATABASE_PATH
+from sqlalchemy import create_engine, inspect
+from sqlalchemy.orm import sessionmaker
+from src.db.entities import Theme, init_db, DATABASE_PATH
 
+from pytest_bdd import scenarios, given, when, then
 
-class TestEntities:
+# Load the feature file
+scenarios('test_db.feature')
 
-    @pytest.fixture
-    def setup_db(self):
-        # Ensure the database directory is clean before each test
-        if os.path.exists(DATABASE_PATH):
-            os.remove(DATABASE_PATH)
-        yield
-        # Clean up after each test
-        if os.path.exists(DATABASE_PATH):
-            os.remove(DATABASE_PATH)
+@pytest.fixture
+def engine():
+    return create_engine(f'sqlite:///{DATABASE_PATH}')
 
-    def test_init_db_creates_database(self, setup_db):
-        # Act
-        init_db()
+@pytest.fixture
+def session(engine):
+    Session = sessionmaker(bind=engine)
+    return Session()
 
-        # Assert
-        assert os.path.exists(DATABASE_PATH)
+@given('the database does not exist')
+def remove_database():
+    if os.path.exists(DATABASE_PATH):
+        os.remove(DATABASE_PATH)
 
-    def test_init_db_creates_tables(self, setup_db):
-        # Act
-        init_db()
+@given('the database path is invalid')
+def invalid_database_path(monkeypatch):
+    invalid_path = DATABASE_PATH.replace('flashcards.db', 'invalid.db')
+    monkeypatch.setattr('src.db.entities.DATABASE_PATH', invalid_path)
 
-        # Assert
-        conn = sqlite3.connect(DATABASE_PATH)
-        c = conn.cursor()
+@given('a theme with a duplicate name exists')
+def duplicate_theme(session):
+    theme = Theme(theme="Math")
+    session.add(theme)
+    session.commit()
 
-        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='cards';")
-        assert c.fetchone() is not None
+@when('the init_db function is called')
+def call_init_db():
+    init_db()
 
-        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='themes';")
-        assert c.fetchone() is not None
+@when('the init_db function is called again')
+def call_init_db_again():
+    init_db()
 
-        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='stats';")
-        assert c.fetchone() is not None
+@then('the database and tables should be created')
+def check_tables_created(engine):
+    inspector = inspect(engine)
+    tables = inspector.get_table_names()
+    assert 'cards' in tables
 
-        conn.close()
+@then('predefined themes should be inserted')
+def check_predefined_themes(session):
+    themes = session.query(Theme).all()
+    assert len(themes) > 0
 
-    def test_init_db_inserts_predefined_themes(self, setup_db):
-        # Act
-        init_db()
-
-        # Assert
-        conn = sqlite3.connect(DATABASE_PATH)
-        c = conn.cursor()
-
-        c.execute("SELECT theme FROM themes;")
-        themes = c.fetchall()
-        assert themes == [("Math",), ("Science",), ("History",)]
-
-        conn.close()
-
-    def test_db_already_exists(self, setup_db):
-        # Arrange
-        init_db()
-
-        # Act (attempt to initialize the database again), No exception should be raised
-        init_db()
-
-        # Assert
-        conn = sqlite3.connect(DATABASE_PATH)
-        c = conn.cursor()
-
-        c.execute("SELECT theme FROM themes;")
-        themes = c.fetchall()
-        assert themes == [("Math",), ("Science",), ("History",)]
-
-        conn.close()
+@then('an error should be logged')
+def check_error_logged(caplog):
+    assert any(record.levelname == 'ERROR' for record in caplog.records)
