@@ -1,76 +1,74 @@
 import os
 import sqlite3
 import pytest
-from src.db.schema import init_db, DATABASE_PATH
+from src.db.entities import init_db, DATABASE_PATH
 
 
-@pytest.fixture
-def setup_db():
-    # Ensure the database directory is clean before each test
-    if os.path.exists(DATABASE_PATH):
-        os.remove(DATABASE_PATH)
-    yield
-    # Clean up after each test
-    if os.path.exists(DATABASE_PATH):
-        os.remove(DATABASE_PATH)
+class TestEntities:
 
+    @pytest.fixture
+    def setup_db(self):
+        # Ensure the database directory is clean before each test
+        if os.path.exists(DATABASE_PATH):
+            os.remove(DATABASE_PATH)
+        yield
+        # Clean up after each test
+        if os.path.exists(DATABASE_PATH):
+            os.remove(DATABASE_PATH)
 
-def test_init_db_creates_database(setup_db):
-    # Act
-    init_db()
+    def test_init_db_creates_database(self, setup_db):
+        # Act
+        init_db()
 
-    # Assert
-    assert os.path.exists(DATABASE_PATH)
+        # Assert
+        assert os.path.exists(DATABASE_PATH)
 
+    def test_init_db_creates_tables(self, setup_db):
+        # Act
+        init_db()
 
-def test_init_db_creates_tables(setup_db):
-    # Act
-    init_db()
+        # Assert
+        conn = sqlite3.connect(DATABASE_PATH)
+        c = conn.cursor()
 
-    # Assert
-    conn = sqlite3.connect(DATABASE_PATH)
-    c = conn.cursor()
+        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='cards';")
+        assert c.fetchone() is not None
 
-    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='cards';")
-    assert c.fetchone() is not None
+        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='themes';")
+        assert c.fetchone() is not None
 
-    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='themes';")
-    assert c.fetchone() is not None
+        c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='stats';")
+        assert c.fetchone() is not None
 
-    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='stats';")
-    assert c.fetchone() is not None
+        conn.close()
 
-    conn.close()
+    def test_init_db_inserts_predefined_themes(self, setup_db):
+        # Act
+        init_db()
 
+        # Assert
+        conn = sqlite3.connect(DATABASE_PATH)
+        c = conn.cursor()
 
-def test_init_db_inserts_predefined_themes(setup_db):
-    # Act
-    init_db()
+        c.execute("SELECT theme FROM themes;")
+        themes = c.fetchall()
+        assert themes == [("Math",), ("Science",), ("History",)]
 
-    # Assert
-    conn = sqlite3.connect(DATABASE_PATH)
-    c = conn.cursor()
+        conn.close()
 
-    c.execute("SELECT theme FROM themes;")
-    themes = c.fetchall()
-    assert themes == [("Math",), ("Science",), ("History",)]
+    def test_db_already_exists(self, setup_db):
+        # Arrange
+        init_db()
 
-    conn.close()
+        # Act (attempt to initialize the database again), No exception should be raised
+        init_db()
 
+        # Assert
+        conn = sqlite3.connect(DATABASE_PATH)
+        c = conn.cursor()
 
-def test_db_already_exists(setup_db):
-    # Arrange
-    init_db()
+        c.execute("SELECT theme FROM themes;")
+        themes = c.fetchall()
+        assert themes == [("Math",), ("Science",), ("History",)]
 
-    # Act (attempt to initialize the database again), No exception should be raised
-    init_db()
-
-    # Assert
-    conn = sqlite3.connect(DATABASE_PATH)
-    c = conn.cursor()
-
-    c.execute("SELECT theme FROM themes;")
-    themes = c.fetchall()
-    assert themes == [("Math",), ("Science",), ("History",)]
-
-    conn.close()
+        conn.close()
