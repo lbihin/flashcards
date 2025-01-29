@@ -10,15 +10,16 @@ from sqlalchemy import (
     String,
     create_engine,
     text,
+    CheckConstraint
 )
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
-# Define the location of the database
-DATABASE_PATH = os.path.join(os.path.expanduser("~"), ".flashcards", "flashcards.db")
+from src.db import config
+
 
 # Define the engine
-engine = create_engine(f"sqlite:///{DATABASE_PATH}", echo=True)
+engine = create_engine(f"sqlite:///{config.DATABASE_PATH}", echo=True)
 
 Base = declarative_base()
 
@@ -30,10 +31,16 @@ class Card(Base):
     id = Column(Integer, primary_key=True)
     question = Column(String)
     reponse = Column(String)
-    probabilite = Column(Float, min=0.1, max=1)
+    probabilite = Column(Float)
     id_theme = Column(Integer, ForeignKey("themes.id", ondelete="RESTRICT"))
 
     theme = relationship("Theme", back_populates="cards")
+
+    __table_args__ = (
+        CheckConstraint(
+            "probabilite >= 0.1 AND probabilite <= 1", name="probabilite_range"
+        ),
+    )
 
 
 class Theme(Base):
@@ -55,42 +62,37 @@ class Stat(Base):
 
 
 def init_db():
-    """Initialize the database."""
+    """Initialize the database.
+    :param path: The path to the database file."""
 
     # Ensure the directory exists
-    os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
+    os.makedirs(os.path.dirname(config.DATABASE_PATH), exist_ok=True)
 
     try:
         # Connect to the database
-        with engine.connect() as conn:
-            # Enable foreign keys for SQLite
-            if conn.dialect.name == "sqlite":  # Only for SQLite
+        with config.engine.connect() as conn:
+            if conn.dialect.name == "sqlite":
                 conn.execute(text("PRAGMA foreign_keys = ON;"))
 
-            Base.metadata.create_all(conn)
+            Base.metadata.create_all(conn)  # Use config.engine here
 
-            # Create a Session
-            Session = sessionmaker(bind=engine)
-            session = Session()
+            Session = sessionmaker(bind=config.engine) # and here
+            with Session() as session: # Use context manager
+                try:
+                    themes = [Theme(theme=theme) for theme in ["Math", "Programming Language", "Git"]]
+                    session.add_all(themes)
+                    session.commit()
 
-            # Insert predefined themes
-            try:
-                themes = [Theme(theme=theme) for theme in ["Math", "SQL", "Git"]]
-                session.add_all(themes)
-                session.commit()
-
-            except IntegrityError as e:
-                session.rollback()
-                logging.error(
-                    f"An error occured during the insertion of predefined themes: {e}"
-                )
-            except Exception as e:
-                session.rollback()
-                logging.error(
-                    f"An unexpected error occured during the insertion of predefined themes: {e}"
-                )
-            finally:
-                session.close()
+                except IntegrityError as e:
+                    session.rollback()
+                    logging.error(
+                        f"An error occured during the insertion of predefined themes: {e}"
+                    )
+                except Exception as e:
+                    session.rollback()
+                    logging.error(
+                        f"An unexpected error occured during the insertion of predefined themes: {e}"
+                    )
 
     except OperationalError as e:
         logging.error(f"An error occured during table creation: {e}")
@@ -98,3 +100,4 @@ def init_db():
         logging.error(
             f"An unexpected error occured during database initialization: {e}"
         )
+        
