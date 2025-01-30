@@ -7,20 +7,20 @@ Feature: CRUD operations on cards
 
   Scenario: Read a card
     Given the database is initialized
-    And a card exists with ID 1, question "What is Python?", answer "A programming language", probability 0.5 and theme ID 2
-    When the card is retrieved by id 1
+    And a card exists with question "What is Python?", answer "A programming language", probability 0.5 and theme ID 2
+    When the card is retrieved by its id
     Then the card should have the answer "A programming language"
 
   Scenario: Update a card
     Given the database is initialized
-    And a card exists with ID 1, question "What is Python?", answer "A programming language", probability 0.5 and theme ID 2
+    And a card exists with question "What is Python?", answer "A programming language", probability 0.5 and theme ID 2
     When the card's answer is updated to "A snake"
     Then the card should have the updated answer "A snake"
 
   Scenario: Delete a card by ID
     Given the database is initialized
-    And a card exists with ID 1, question "What is Python?", answer "A programming language", probability 0.5 and theme ID 2
-    When the card is deleted by ID 1
+    And a card exists with question "What is Python?", answer "A programming language", probability 0.5 and theme ID 2
+    When the card is deleted by ID
     Then the card should not be present in the database
 
   Scenario: Get all cards

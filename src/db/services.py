@@ -42,6 +42,7 @@ def update_card(
     :param id_theme: The ID of the theme.
     """
     with config.get_session() as session:
+
         card = session.query(Card).filter_by(id=id).first()
         if card is None:
             logging.error(f"Card {id} not found")
@@ -53,6 +54,7 @@ def update_card(
 
         session.commit()
         logging.info(f"Card {id} updated")
+        return card
 
 
 def delete_card(id: int):

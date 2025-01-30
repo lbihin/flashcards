@@ -1,138 +1,100 @@
-import os
 import pytest
+from pytest_bdd import given, scenarios, then, when
+import uuid
+
 from src.db import config
 from src.db.config import setup_config
-from src.db.entities import Card, Theme, init_db
+from src.db.entities import Card, init_db
 from src.db.services import (
     create_card,
-    get_card,
-    update_card,
     delete_card,
     get_all_cards,
+    get_card,
     get_cards_by_theme,
     get_number_of_cards,
+    update_card,
 )
-
-from pytest_bdd import scenarios, given, when, then
-
-TEST_DATABASE_PATH = os.path.join(os.path.dirname(__file__), "test_flashcards.db")
-setup_config(TEST_DATABASE_PATH)
 
 # Load the feature file
 scenarios("features/crud_cards.feature")
 
 
-@pytest.fixture(scope="module")
-def bdd_memory():
-    class BDDMemory:
-        pass
-
-    mem = BDDMemory()
-    yield mem
+@pytest.fixture
+def session():
+    # Use an in-memory database for tests
+    TEST_DATABASE_URL = f"sqlite:///:memory:_{uuid.uuid4()}"   # In-memory database
+    setup_config(TEST_DATABASE_URL)
+    init_db()  # Initialize the in-memory database for each test
     with config.get_session() as session:
         yield session
-    if os.path.exists(TEST_DATABASE_PATH):
-        os.remove(TEST_DATABASE_PATH)
+    # No need to explicitly delete for in-memory database
 
 
-def get_or_create_card(session, question, reponse, probabilite, id_theme):
-    is_created = False
-    card = (
-        session.query(Card)
-        .filter_by(
-            question=question,
-            reponse=reponse,
-            probabilite=probabilite,
-            id_theme=id_theme,
-        )
-        .first()
-    )
-    if card is None:
-        card = create_card(question, reponse, probabilite, id_theme)
-        is_created = True
-    return card, is_created
-
-
-# CRUD Operations Scenarios
-@given("the database is initialized")
-def initialize_database():
-    if os.path.exists(TEST_DATABASE_PATH):
-        os.remove(TEST_DATABASE_PATH)
-    init_db()
+@given("the database is initialized", target_fixture="init_database")  # Inject the session
+def initialize_database(session):
+    # Database is already initialized by the session fixture
+    pass  # Nothing to do here
 
 
 @when(
-    'a new card is created with question "What is Python?", answer "A programming language", probability 0.5 and theme ID 2'
+    'a new card is created with question "What is Python?", answer "A programming language", probability 0.5 and theme ID 2',
+    target_fixture="card_created",
 )
 def create_new_card():
-    create_card("What is Python?", "A programming language", 0.5, 2)
+    return create_card("What is Python?", "A programming language", 0.5, 2)
 
 
 @then("the card should be present in the database")
-def check_card_present():
-    with config.get_session() as session:
-        card = session.query(Card).filter_by(question="What is Python?").first()
-    assert card is not None
-    assert card.reponse == "A programming language"
+def check_card_present(session, card_created):
+    retrieved_card = (
+        session.query(Card).filter_by(question=card_created.question).first()
+    )
+    assert retrieved_card is not None
+    assert retrieved_card.reponse == card_created.reponse
 
 
 @given(
-    'a card exists with ID 1, question "What is Python?", answer "A programming language", probability 0.5 and theme ID 2'
+    'a card exists with question "What is Python?", answer "A programming language", probability 0.5 and theme ID 2',
+    target_fixture="existing_card",
 )
-def ensure_card_exists():
-    with config.get_session() as session:
-        card = (
-            session.query(Card)
-            .filter_by(
-                id=1,
-                question="What is Python?",
-                reponse="A programming language",
-                probabilite=0.5,
-                id_theme=2,
-            )
-            .first()
-        )
-    if card is None:
-        session.query(Card).delete()
-        session.commit()
-        create_card("What is Python?", "A programming language", 0.5, 2)
+def ensure_card_exists(session):
+    return create_card("What is Python?", "A programming language", 0.5, 2)
 
 
-@when("the card is retrieved by id 1")
-def retrieve_card(bdd_memory):
-    bdd_memory.card = get_card(1)
+@when("the card is retrieved by its id", target_fixture="retrieved_card")
+def retrieve_card(existing_card):
+    return get_card(existing_card.id)
 
 
 @then('the card should have the answer "A programming language"')
-def check_card_answer(bdd_memory):
-    assert bdd_memory.card.reponse == "A programming language"
+def check_card_answer(retrieved_card):
+    assert retrieved_card.reponse == "A programming language"
 
 
 @when('the card\'s answer is updated to "A snake"')
-def update_card_answer():
-    update_card(1, "What is Python?", "A snake", 0.5, 2)
+def update_card_answer(existing_card):
+    update_card(existing_card.id, "What is Python?", "A snake", 0.5, 2)
 
 
 @then('the card should have the updated answer "A snake"')
-def check_updated_card_answer():
-    with config.get_session() as session:
-        card = session.query(Card).filter_by(id=1).first()
-    assert card.reponse == "A snake"
+def check_updated_card_answer(existing_card):
+    updated_card = get_card(existing_card.id)
+    assert updated_card.reponse == "A snake"
 
 
-@when("the card is deleted by ID 1")
-def delete_card_by_id():
-    delete_card(1)
+@when("the card is deleted by ID", target_fixture="deleted_card_id")
+def delete_card_by_id(existing_card):
+    delete_card(existing_card.id)
+    return existing_card.id
 
 
 @then("the card should not be present in the database")
-def check_card_not_present_by_id():
-    with config.get_session() as session:
-        card = session.query(Card).filter_by(id=1).first()
+def check_card_not_present_by_id(session, deleted_card_id):
+    card = session.query(Card).filter_by(id=deleted_card_id).first()
     assert card is None
 
 
-@given("3 cards exist")
+@given("3 cards exist", target_fixture="three_cards")
 def ensure_multiple_cards_exist():
     create_card(
         question="What is Python?",
@@ -151,52 +113,55 @@ def ensure_multiple_cards_exist():
     )
 
 
-@when("all cards are retrieved")
-def retrieve_all_cards(bdd_memory):
-    bdd_memory.cards = get_all_cards()
+@when("all cards are retrieved", target_fixture="retrieved_cards")
+def retrieve_all_cards():
+    cards = get_all_cards()
+    return cards
 
 
 @then("3 cards are retrieved")
-def check_retrieved_card(bdd_memory):
-    assert len(bdd_memory.cards) == 3
+def check_retrieved_card(retrieved_cards):
+    assert len(retrieved_cards) == 3
 
 
-@when("the number of cards is retrieved")
-def retrieve_number_of_cards(bdd_memory):
-    bdd_memory.number_of_cards = get_number_of_cards()
+@when("the number of cards is retrieved", target_fixture="number_of_cards")
+def retrieve_number_of_cards(session):
+    number = get_number_of_cards()
+    return number
 
 
 @then("the number of cards should be 3")
-def check_number_of_cards(bdd_memory):
-    assert bdd_memory.number_of_cards == 3
+def check_number_of_cards(number_of_cards):
+    assert number_of_cards == 3
 
 
-@given("2 cards exist with theme ID 1")
-def ensure_multiple_cards_exist_with_theme():
-    with config.get_session() as session:
-        cards = [
-            Card(
-                question="What is Python?",
-                reponse="A programming language",
-                probabilite=0.5,
-                id_theme=1,
-            ),
-            Card(
-                question="What is SQL?",
-                reponse="A query language",
-                probabilite=0.5,
-                id_theme=1,
-            ),
-        ]
-        session.add_all(cards)
-        session.commit()
+@given("2 cards exist with theme ID 1", target_fixture="two_theme_cards")
+def ensure_multiple_cards_exist_with_theme(session):
+    cards = [
+        Card(
+            question="What is Python?",
+            reponse="A programming language",
+            probabilite=0.5,
+            id_theme=1,
+        ),
+        Card(
+            question="What is SQL?",
+            reponse="A query language",
+            probabilite=0.5,
+            id_theme=1,
+        ),
+    ]
+    session.add_all(cards)
+    session.commit()
+    return cards
 
 
-@when("the cards are retrieved by theme ID 1")
-def retrieve_cards_by_theme(bdd_memory):
-    bdd_memory.cards_by_theme = get_cards_by_theme(1)
+@when("the cards are retrieved by theme ID 1", target_fixture="retrieved_theme_cards")
+def retrieve_cards_by_theme(session):
+    cards = get_cards_by_theme(1)
+    return cards
 
 
 @then("the number of cards should be 2")
-def check_number_of_cards_by_theme(bdd_memory):
-    assert len(bdd_memory.cards_by_theme) == 2
+def check_number_of_cards_by_theme(retrieved_theme_cards):
+    assert len(retrieved_theme_cards) == 2
