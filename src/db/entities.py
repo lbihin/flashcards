@@ -10,7 +10,7 @@ from sqlalchemy import (
     String,
     create_engine,
     text,
-    CheckConstraint
+    CheckConstraint,
 )
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
@@ -76,10 +76,13 @@ def init_db():
 
             Base.metadata.create_all(conn)  # Use config.engine here
 
-            Session = sessionmaker(bind=config.engine) # and here
-            with Session() as session: # Use context manager
+            Session = sessionmaker(bind=config.engine)  # and here
+            with Session() as session:  # Use context manager
                 try:
-                    themes = [Theme(theme=theme) for theme in ["Math", "Programming Language", "Git"]]
+                    themes = [
+                        Theme(theme=theme)
+                        for theme in ["Math", "Programming Language", "Git"]
+                    ]
                     session.add_all(themes)
                     session.commit()
 
@@ -100,4 +103,3 @@ def init_db():
         logging.error(
             f"An unexpected error occured during database initialization: {e}"
         )
-        

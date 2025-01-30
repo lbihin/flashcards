@@ -11,7 +11,12 @@ def create_card(question: str, reponse: str, probabilite: float, id_theme: int):
     :param probabilite: The probability of the card.
     :param id_theme: The ID of the theme."""
     with config.get_session() as session:
-        newCard = Card(question=question, reponse=reponse, probabilite=probabilite, id_theme=id_theme)
+        newCard = Card(
+            question=question,
+            reponse=reponse,
+            probabilite=probabilite,
+            id_theme=id_theme,
+        )
         session.add(newCard)
         session.commit()
         logging.info(f"Card {newCard.id} created")
