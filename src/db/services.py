@@ -15,6 +15,7 @@ def create_card(question: str, reponse: str, probabilite: float, id_theme: int):
         session.add(newCard)
         session.commit()
         logging.info(f"Card {newCard.id} created")
+    return newCard
 
 
 def get_card(id: int):
@@ -37,8 +38,11 @@ def update_card(
     """
     with config.get_session() as session:
         card = session.query(Card).filter_by(id=id).first()
+        if card is None:
+            logging.error(f"Card {id} not found")
+            return
         card.question = question
-        card.response = reponse
+        card.reponse = reponse
         card.probabilite = probabilite
         card.id_theme = id_theme
 
