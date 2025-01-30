@@ -15,6 +15,7 @@ setup_config(TEST_DATABASE_PATH)
 # Load the feature file
 scenarios("features/init_db.feature")
 
+
 @pytest.fixture
 def session():
     Session = sessionmaker(bind=config.engine)

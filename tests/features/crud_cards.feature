@@ -27,7 +27,7 @@ Feature: CRUD operations on cards
     Given the database is initialized
     And 3 cards exist
     When all cards are retrieved
-    Then the number of cards should be 3
+    Then 3 cards are retrieved
 
   Scenario: Get the number of cards
     Given the database is initialized
