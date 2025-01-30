@@ -3,19 +3,27 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+global _engine_initialized
+
 DATABASE_PATH = os.path.join(os.path.expanduser("~"), ".flashcards", "flashcards.db")
-engine = create_engine(f"sqlite:///{DATABASE_PATH}", echo=False)
+engine = None
+engine_initialized = False  # Variable globale pour suivre l'état de l'engine
 
 
 def setup_config(path: str | None = None):
+    """Set up the configuration for the database."""
+    global engine_initialized
     global DATABASE_PATH
+
+    if engine_initialized and path != DATABASE_PATH:
+        raise ValueError("Cannot change database path after the engine has been initialized")
+    
     if path is not None:  # Only update if a new path is provided
         DATABASE_PATH = path
 
     global engine
-    if engine:  # Check if an engine already exists
-        engine.dispose()
     engine = create_engine(f"sqlite:///{DATABASE_PATH}", echo=False)
+    engine_initialized = True
 
 
 @contextmanager
