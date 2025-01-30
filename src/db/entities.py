@@ -65,8 +65,9 @@ def init_db():
     """Initialize the database.
     :param path: The path to the database file."""
 
-    # Ensure the directory exists
-    os.makedirs(os.path.dirname(config.DATABASE_PATH), exist_ok=True)
+    if config.DATABASE_PATH != ":memory:":  # Skip for in-memory database
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(config.DATABASE_PATH), exist_ok=True)
 
     try:
         # Connect to the database

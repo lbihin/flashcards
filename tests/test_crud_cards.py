@@ -22,8 +22,9 @@ scenarios("features/crud_cards.feature")
 @pytest.fixture
 def session():
     # Use an in-memory database for tests
-    TEST_DATABASE_URL = f"sqlite:///:memory:_{uuid.uuid4()}"   # In-memory database
+    TEST_DATABASE_URL = ":memory:"   # In-memory database
     setup_config(TEST_DATABASE_URL)
+    
     init_db()  # Initialize the in-memory database for each test
     with config.get_session() as session:
         yield session
