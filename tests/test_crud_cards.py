@@ -32,7 +32,7 @@ def session():
 
 
 @given("the database is initialized", target_fixture="init_database")  # Inject the session
-def initialize_database(session):
+def initialize_database():
     # Database is already initialized by the session fixture
     pass  # Nothing to do here
 
@@ -41,7 +41,7 @@ def initialize_database(session):
     'a new card is created with question "What is Python?", answer "A programming language", probability 0.5 and theme ID 2',
     target_fixture="card_created",
 )
-def create_new_card():
+def create_new_card(session):
     return create_card("What is Python?", "A programming language", 0.5, 2)
 
 
@@ -58,7 +58,7 @@ def check_card_present(session, card_created):
     'a card exists with question "What is Python?", answer "A programming language", probability 0.5 and theme ID 2',
     target_fixture="existing_card",
 )
-def ensure_card_exists(session):
+def ensure_card_exists():
     return create_card("What is Python?", "A programming language", 0.5, 2)
 
 
@@ -96,7 +96,7 @@ def check_card_not_present_by_id(session, deleted_card_id):
 
 
 @given("3 cards exist", target_fixture="three_cards")
-def ensure_multiple_cards_exist():
+def ensure_multiple_cards_exist(session):
     create_card(
         question="What is Python?",
         reponse="A programming language",
