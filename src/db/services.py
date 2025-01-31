@@ -1,8 +1,12 @@
 import logging
 from typing import List
-from src.db import config
-from .entities import Card
 
+from src.db import config
+from src.db.entities import Card
+
+
+
+# --- CRUD operations for the Card entity ---
 
 def create_card(question: str, reponse: str, probabilite: float, id_theme: int):
     """Create a new card in the database.

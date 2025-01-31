@@ -1,6 +1,5 @@
 import pytest
 from pytest_bdd import given, scenarios, then, when
-import uuid
 
 from src.db import config
 from src.db.config import setup_config
