@@ -18,6 +18,7 @@ def reset_config():
     config.engine.dispose()  # Fermer la connexion
     config.engine = None
 
+
 @pytest.fixture(scope="function")  # Important: Scope is function
 def test_db_path():
     """Provides a path to a temporary test database file (using tempfile)."""
@@ -26,7 +27,6 @@ def test_db_path():
         reset_config()
     yield db_path
     os.remove(db_path)  # Clean up after the test
-    
 
 
 @given("the database does not exist")

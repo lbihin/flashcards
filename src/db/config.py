@@ -16,8 +16,10 @@ def setup_config(path: str | None = None):
     global DATABASE_PATH
 
     if engine_initialized and path != DATABASE_PATH:
-        raise ValueError("Cannot change database path after the engine has been initialized")
-    
+        raise ValueError(
+            "Cannot change database path after the engine has been initialized"
+        )
+
     if path is not None:  # Only update if a new path is provided
         DATABASE_PATH = path
 

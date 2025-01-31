@@ -1,12 +1,13 @@
 import logging
+from sqlalchemy.exc import IntegrityError
 from typing import List
 
 from src.db import config
-from src.db.entities import Card
-
+from src.db.entities import Card, Theme
 
 
 # --- CRUD operations for the Card entity ---
+
 
 def create_card(question: str, reponse: str, probabilite: float, id_theme: int):
     """Create a new card in the database.
@@ -90,3 +91,19 @@ def get_cards_by_theme(id_theme: int) -> List[Card]:
     """
     with config.get_session() as session:
         return session.query(Card).filter_by(id_theme=id_theme).all()
+
+
+# --- CRUD operations for the Themes entity ---
+def create_theme(theme: str):
+    """Create a new theme in the database.
+    :param theme: The theme of the card."""
+    with config.get_session() as session:
+        try:
+            new_theme = Theme(theme=theme)
+            session.add(new_theme)
+            session.commit()
+            logging.info(f"Theme '{theme}' created.")
+        except IntegrityError:
+            logging.error(f"Theme '{theme}' already exists.")
+            return
+    return new_theme
