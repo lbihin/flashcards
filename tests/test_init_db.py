@@ -25,8 +25,8 @@ def test_db_path():
     """Provides a path to a temporary test database file (using tempfile)."""
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
         db_path = tmp_file.name
+        reset_config()
     yield db_path
-    reset_config()
     os.remove(db_path)  # Clean up after the test
     
 
