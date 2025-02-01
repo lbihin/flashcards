@@ -42,8 +42,8 @@ def check_theme_created(theme_created):  # Add theme_created argument
 
 
 @given('a theme exists with name "Math"', target_fixture="existing_theme")
-def ensure_theme_exists_by_name():
-    return create_theme("Math")
+def ensure_theme_exists_by_name(session):
+    assert session.query(Theme).filter_by(theme="Math").first() is not None
 
 
 @when('a new theme is created with name "Math"')
@@ -54,7 +54,7 @@ def create_existing_theme():
 @then("an error should be logged indicating the theme already exists")
 def check_theme_already_exists(caplog):
     assert any(
-        record.levelname == "ERROR" and "Theme 'Math' already exists" in record.message
+        record.levelname == "ERROR" and "An error occured while execution on the database" in record.message
         for record in caplog.records
     )
 

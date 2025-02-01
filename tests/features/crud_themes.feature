@@ -1,6 +1,6 @@
 Feature: CRUD operations on themes
 
-  Scenario: Successfully create a new theme
+  Scenario: create a new theme
     Given the database is initialized
     When a new theme is created with name "Science"
     Then the theme "Science" should be present in the database
@@ -11,7 +11,7 @@ Feature: CRUD operations on themes
     When a new theme is created with name "Math"
     Then an error should be logged indicating the theme already exists
 
-  Scenario: Successfully get a theme by ID
+  Scenario: get a theme by ID
     Given the database is initialized
     And a theme exists with ID 1
     When the theme is retrieved by ID 1
