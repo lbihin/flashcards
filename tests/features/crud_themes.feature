@@ -10,3 +10,14 @@ Feature: CRUD operations on themes
     And a theme exists with name "Math"
     When a new theme is created with name "Math"
     Then an error should be logged indicating the theme already exists
+
+  Scenario: Successfully get a theme by ID
+    Given the database is initialized
+    And a theme exists with ID 1
+    When the theme is retrieved by ID 1
+    Then the theme with ID 1 should be returned
+
+  Scenario: Attempt to get a non-existent theme by ID
+    Given the database is initialized
+    When the theme is retrieved by ID 999
+    Then no theme should be returned

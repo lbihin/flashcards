@@ -102,8 +102,17 @@ def create_theme(theme: str):
             new_theme = Theme(theme=theme)
             session.add(new_theme)
             session.commit()
+            session.refresh(new_theme)
             logging.info(f"Theme '{theme}' created.")
         except IntegrityError:
             logging.error(f"Theme '{theme}' already exists.")
             return
     return new_theme
+
+
+def get_theme(id_theme: int):
+    """Get a theme by its ID.
+    :param id_theme: The ID of the theme.
+    """
+    with config.get_session() as session:
+        return session.query(Theme).filter_by(id=id_theme).first()
