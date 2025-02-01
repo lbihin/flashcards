@@ -6,7 +6,7 @@ from pytest_bdd import given, scenarios, then, when
 
 from src.db import config
 from src.db.config import setup_config
-from src.db.entities import Theme, init_db
+from src.db.tables import Theme, init_db
 
 # Load the feature file
 scenarios("features/database_initialization.feature")
@@ -18,6 +18,7 @@ def reset_config():
     config.engine.dispose()  # Fermer la connexion
     config.engine = None
 
+
 @pytest.fixture(scope="function")  # Important: Scope is function
 def test_db_path():
     """Provides a path to a temporary test database file (using tempfile)."""
@@ -26,7 +27,6 @@ def test_db_path():
         reset_config()
     yield db_path
     os.remove(db_path)  # Clean up after the test
-    
 
 
 @given("the database does not exist")

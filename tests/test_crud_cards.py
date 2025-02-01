@@ -3,7 +3,7 @@ from pytest_bdd import given, scenarios, then, when
 
 from src.db import config
 from src.db.config import setup_config
-from src.db.entities import Card, init_db
+from src.db.tables import Card, init_db
 from src.db.services import (
     create_card,
     delete_card,
@@ -21,16 +21,18 @@ scenarios("features/crud_cards.feature")
 @pytest.fixture
 def session():
     # Use an in-memory database for tests
-    TEST_DATABASE_URL = ":memory:"   # In-memory database
+    TEST_DATABASE_URL = ":memory:"  # In-memory database
     setup_config(TEST_DATABASE_URL)
-    
+
     init_db()  # Initialize the in-memory database for each test
     with config.get_session() as session:
         yield session
     # No need to explicitly delete for in-memory database
 
 
-@given("the database is initialized", target_fixture="init_database")  # Inject the session
+@given(
+    "the database is initialized", target_fixture="init_database"
+)  # Inject the session
 def initialize_database():
     # Database is already initialized by the session fixture
     pass  # Nothing to do here
