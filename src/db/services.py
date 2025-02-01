@@ -1,8 +1,6 @@
 import logging
-from sqlalchemy.exc import IntegrityError
 from typing import List
 
-from src.db import config
 from src.db.tables import (
     Card,
     Theme,
