@@ -102,3 +102,11 @@ def get_theme(id_theme: int):
     :param id_theme: The ID of the theme.
     """
     return get_row_by_id(table=Theme, id=id_theme)
+
+
+def update_theme(id_theme: int, theme: str):
+    """Update a theme in the database.
+    :param id_theme: The ID of the theme.
+    :param theme: The theme of the card.
+    """
+    return update_row(table=Theme, id=id_theme, theme=theme)

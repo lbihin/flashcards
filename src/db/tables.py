@@ -182,12 +182,16 @@ def update_row(table, id, **kwargs):
     :param kwargs: The updated row data."""
     session = kwargs.pop("session")  # type: sqlalchemy.orm.session.Session
     row = session.query(table).filter_by(id=id).first()
-    for key, value in kwargs.items():
-        setattr(row, key, value)
-    session.commit()
-    session.refresh(row)
-    logging.debug(f"Row {id} in table '{table.__tablename__}' updated")
-    return row
+    if row is not None:
+        for key, value in kwargs.items():
+            setattr(row, key, value)
+        session.commit()
+        session.refresh(row)
+        logging.debug(f"Row in table '{table.__tablename__}' with id={id} updated")
+        return row
+    logging.error(
+        f"Row in table '{table.__tablename__}' with id={id} not found for update"
+    )
 
 
 @get_session

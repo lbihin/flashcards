@@ -4,7 +4,7 @@ from pytest_bdd import given, scenarios, then, when, parsers
 from src.db import config
 from src.db.config import setup_config
 from src.db.tables import Theme, init_db
-from src.db.services import create_theme, get_theme
+from src.db.services import create_theme, get_theme, update_theme
 
 
 scenarios("features/crud_themes.feature")
@@ -41,9 +41,14 @@ def check_theme_created(theme_created):  # Add theme_created argument
     assert theme_created.id is not None
 
 
-@given('a theme exists with name "Math"', target_fixture="existing_theme")
-def ensure_theme_exists_by_name(session):
-    assert session.query(Theme).filter_by(theme="Math").first() is not None
+@given(
+    parsers.parse('a theme exists with ID {id_theme} and name "{theme}"'),
+    target_fixture="existing_theme",
+)
+def ensure_theme_exists_by_id_and_name(session, id_theme, theme):
+    theme_obj = session.query(Theme).filter_by(theme=theme).first()
+    assert theme_obj.id == int(id_theme)
+    assert theme_obj.theme == theme
 
 
 @when('a new theme is created with name "Math"')
@@ -54,21 +59,22 @@ def create_existing_theme():
 @then("an error should be logged indicating the theme already exists")
 def check_theme_already_exists(caplog):
     assert any(
-        record.levelname == "ERROR" and "An error occured while execution on the database" in record.message
+        record.levelname == "ERROR"
+        and "An error occured while execution on the database" in record.message
         for record in caplog.records
     )
 
 
-@given("a theme exists with ID 1", target_fixture="id_theme")
-def ensure_theme_exists_by_id(session):
-    return session.query(Theme).filter_by(id=1).first()
+@given(parsers.parse("a theme exists with ID {id_theme}"), target_fixture="id_theme")
+def ensure_theme_exists_by_id(session, id_theme):
+    return session.query(Theme).filter_by(id=id_theme).first()
 
 
 @when(
     parsers.parse("the theme is retrieved by ID {id_theme}"),
     target_fixture="retrieved_theme",
 )
-def retrieve_theme_with_id_1(session, id_theme):  # Add session argument
+def retrieve_theme_with_id(id_theme):
     return get_theme(int(id_theme))
 
 
@@ -81,3 +87,29 @@ def check_theme_retrieved(retrieved_theme, id_theme):
 @then("no theme should be returned")
 def check_no_theme_retrieved(retrieved_theme):
     assert retrieved_theme is None
+
+
+@when(parsers.parse('the theme with ID {id_theme} is updated to "{theme}"'))
+def update_theme_with_id(id_theme, theme):
+    update_theme(id_theme=id_theme, theme=theme)
+
+
+@then(parsers.parse('the theme with ID {id_theme} should have the name "{theme}"'))
+def check_theme_updated(session, id_theme, theme):
+    theme_obj = session.query(Theme).filter_by(id=int(id_theme)).first()
+    assert theme_obj.theme == theme
+    assert theme_obj.id == int(id_theme)
+
+
+@then(
+    parsers.parse(
+        "an error should be logged indicating the row in {table} with ID {id_theme} was not found"
+    )
+)
+def check_error_theme_not_found(caplog, table, id_theme):
+    assert any(
+        record.levelname == "ERROR"
+        and f"Row in table '{table}' with id={id_theme} not found for update"
+        in record.message
+        for record in caplog.records
+    )

@@ -7,7 +7,7 @@ Feature: CRUD operations on themes
 
   Scenario: Attempt to create a duplicate theme
     Given the database is initialized
-    And a theme exists with name "Math"
+    And a theme exists with ID 1 and name "Math"
     When a new theme is created with name "Math"
     Then an error should be logged indicating the theme already exists
 
@@ -21,3 +21,14 @@ Feature: CRUD operations on themes
     Given the database is initialized
     When the theme is retrieved by ID 999
     Then no theme should be returned
+
+  Scenario: Successfully update a theme
+    Given the database is initialized
+    And a theme exists with ID 1 and name "Math"
+    When the theme with ID 1 is updated to "Science"
+    Then the theme with ID 1 should have the name "Science"
+
+  Scenario: Attempt to update a non-existent theme
+    Given the database is initialized
+    When the theme with ID 999 is updated to "History"
+    Then an error should be logged indicating the row in themes with ID 999 was not found
