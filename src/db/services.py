@@ -110,3 +110,11 @@ def update_theme(id_theme: int, theme: str):
     :param theme: The theme of the card.
     """
     return update_row(table=Theme, id=id_theme, theme=theme)
+
+
+def delete_theme(id_theme: int):
+    """Delete a theme from the database.
+    :param id_theme: The ID of the theme.
+    """
+    delete_row(table=Theme, id=id_theme)
+    logging.info(f"Theme {id_theme} deleted")

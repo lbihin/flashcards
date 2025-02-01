@@ -4,7 +4,7 @@ from pytest_bdd import given, scenarios, then, when, parsers
 from src.db import config
 from src.db.config import setup_config
 from src.db.tables import Theme, init_db
-from src.db.services import create_theme, get_theme, update_theme
+from src.db.services import create_theme, delete_theme, get_theme, update_theme
 
 
 scenarios("features/crud_themes.feature")
@@ -109,7 +109,19 @@ def check_theme_updated(session, id_theme, theme):
 def check_error_theme_not_found(caplog, table, id_theme):
     assert any(
         record.levelname == "ERROR"
-        and f"Row in table '{table}' with id={id_theme} not found for update"
-        in record.message
+        and f"Row in table '{table}' with id={id_theme} not found." in record.message
         for record in caplog.records
     )
+
+
+@when(parsers.parse("the theme with ID {id_theme} is deleted"))
+def delete_theme_by_id(id_theme):
+    delete_theme(int(id_theme))
+
+
+@then(
+    parsers.parse("the theme with ID {id_theme} should not be present in the database")
+)
+def check_theme_deleted(session, id_theme):
+    theme_obj = session.query(Theme).filter_by(id=int(id_theme)).first()
+    assert theme_obj is None

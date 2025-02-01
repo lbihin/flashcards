@@ -22,7 +22,7 @@ Feature: CRUD operations on themes
     When the theme is retrieved by ID 999
     Then no theme should be returned
 
-  Scenario: Successfully update a theme
+  Scenario: Update a theme
     Given the database is initialized
     And a theme exists with ID 1 and name "Math"
     When the theme with ID 1 is updated to "Science"
@@ -31,4 +31,15 @@ Feature: CRUD operations on themes
   Scenario: Attempt to update a non-existent theme
     Given the database is initialized
     When the theme with ID 999 is updated to "History"
+    Then an error should be logged indicating the row in themes with ID 999 was not found
+
+  Scenario: Delete a theme
+    Given the database is initialized
+    And a theme exists with ID 1 and name "Math"
+    When the theme with ID 1 is deleted
+    Then the theme with ID 1 should not be present in the database
+
+  Scenario: Attempt to delete a non-existent theme
+    Given the database is initialized
+    When the theme with ID 999 is deleted
     Then an error should be logged indicating the row in themes with ID 999 was not found

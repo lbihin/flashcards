@@ -189,9 +189,7 @@ def update_row(table, id, **kwargs):
         session.refresh(row)
         logging.debug(f"Row in table '{table.__tablename__}' with id={id} updated")
         return row
-    logging.error(
-        f"Row in table '{table.__tablename__}' with id={id} not found for update"
-    )
+    logging.error(f"Row in table '{table.__tablename__}' with id={id} not found.")
 
 
 @get_session
@@ -202,9 +200,11 @@ def delete_row(table, id, **kwargs):
     :param id: The ID of the row to delete."""
     session = kwargs.pop("session")  # type: sqlalchemy.orm.session.Session
     row = session.query(table).filter_by(id=id).first()
-    session.delete(row)
-    session.commit()
-    logging.debug(f"Row {id} in table '{table.__tablename__}' deleted")
+    if row is not None:
+        session.delete(row)
+        session.commit()
+        logging.debug(f"Row {id} in table '{table.__tablename__}' deleted")
+    logging.error(f"Row in table '{table.__tablename__}' with id={id} not found.")
 
 
 @get_session
