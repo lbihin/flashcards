@@ -3,7 +3,7 @@ from pytest_bdd import given, scenarios, then, when
 
 from src.db import config
 from src.db.config import setup_config
-from src.db.entities import Card, init_db
+from src.db.tables import Card, init_db
 from src.db.services import (
     create_card,
     delete_card,

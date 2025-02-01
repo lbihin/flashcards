@@ -3,7 +3,7 @@ from pytest_bdd import given, scenarios, then, when, parsers
 
 from src.db import config
 from src.db.config import setup_config
-from src.db.entities import Theme, init_db
+from src.db.tables import Theme, init_db
 from src.db.services import create_theme, get_theme
 
 

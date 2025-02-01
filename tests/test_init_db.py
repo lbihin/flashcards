@@ -6,7 +6,7 @@ from pytest_bdd import given, scenarios, then, when
 
 from src.db import config
 from src.db.config import setup_config
-from src.db.entities import Theme, init_db
+from src.db.tables import Theme, init_db
 
 # Load the feature file
 scenarios("features/database_initialization.feature")
