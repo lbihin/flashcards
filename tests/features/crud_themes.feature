@@ -43,3 +43,9 @@ Feature: CRUD operations on themes
     Given the database is initialized
     When the theme with ID 999 is deleted
     Then an error should be logged indicating the row in themes with ID 999 was not found
+
+  Scenario: Get all themes
+    Given the database is initialized
+    And 3 themes exist in the database
+    When all themes are retrieved
+    Then 3 themes should be returned

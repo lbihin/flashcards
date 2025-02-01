@@ -4,7 +4,13 @@ from pytest_bdd import given, scenarios, then, when, parsers
 from src.db import config
 from src.db.config import setup_config
 from src.db.tables import Theme, init_db
-from src.db.services import create_theme, delete_theme, get_theme, update_theme
+from src.db.services import (
+    create_theme,
+    delete_theme,
+    get_all_themes,
+    get_theme,
+    update_theme,
+)
 
 
 scenarios("features/crud_themes.feature")
@@ -125,3 +131,18 @@ def delete_theme_by_id(id_theme):
 def check_theme_deleted(session, id_theme):
     theme_obj = session.query(Theme).filter_by(id=int(id_theme)).first()
     assert theme_obj is None
+
+
+@given(parsers.parse("{nr_themes} themes exist in the database"))
+def ensure_nr_themes_exist(session, nr_themes):
+    assert session.query(Theme).count() == int(nr_themes)
+
+
+@when("all themes are retrieved", target_fixture="all_themes")
+def retrieve_all_themes():
+    return get_all_themes()
+
+
+@then(parsers.parse("{nr_themes} themes should be returned"))
+def check_all_themes_retrieved(all_themes, nr_themes):
+    assert len(all_themes) == int(nr_themes)

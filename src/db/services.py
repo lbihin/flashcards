@@ -118,3 +118,8 @@ def delete_theme(id_theme: int):
     """
     delete_row(table=Theme, id=id_theme)
     logging.info(f"Theme {id_theme} deleted")
+
+
+def get_all_themes():
+    """Get all themes from the database."""
+    return get_all_rows(table=Theme)
