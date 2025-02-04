@@ -15,7 +15,6 @@
     },
     "editor.formatOnSaveMode":"file",
     "[python]": {
-        "editor.defaultColorDecorators": true,
         "editor.defaultFormatter": "ms-python.black-formatter"
     }
 }
