@@ -1,8 +1,9 @@
 import os
-import tempfile
 
 import pytest
-from pytest_bdd import given, scenarios, then, when
+from pytest_bdd import given, parsers, scenarios, then, when
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from src.db import config
 from src.db.config import setup_config
@@ -12,55 +13,41 @@ from src.db.tables import Theme, init_db
 scenarios("features/database_initialization.feature")
 
 
-def reset_config():
-    """Reset the config before running the tests"""
-    config.engine_initialized = False
-    config.engine.dispose()  # Fermer la connexion
-    config.engine = None
+@pytest.fixture
+def session():
+    # Use an in-memory database for tests
+    TEST_DATABASE_URL = ":memory:"  # In-memory database
+    setup_config(TEST_DATABASE_URL)
 
-
-@pytest.fixture(scope="function")  # Important: Scope is function
-def test_db_path():
-    """Provides a path to a temporary test database file (using tempfile)."""
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
-        db_path = tmp_file.name
-        reset_config()
-    yield db_path
-    os.remove(db_path)  # Clean up after the test
+    init_db()  # Initialize the in-memory database for each test
+    with config.get_session() as session:
+        yield session
 
 
 @given("the database does not exist")
-def database_does_not_exist(test_db_path):
-    try:
-        os.remove(test_db_path)
-    except FileNotFoundError:
-        pass
+def database_does_not_exist():
+    pass  # No action needed for in-memory database
 
 
 @when("the init_db function is called")
-def init_db_called(test_db_path):
-    setup_config(test_db_path)  # Setup config BEFORE calling init_db
+def init_db_called():
     init_db()
 
 
 @then("the database and tables should be created")
-def database_and_tables_created(test_db_path):
-    assert os.path.exists(test_db_path)
-    with config.get_session() as session:  # Use the session to check tables
-        from sqlalchemy import inspect
+def database_and_tables_created(session):
+    from sqlalchemy import inspect
 
-        inspector = inspect(session.bind)
-        assert inspector.has_table("cards")
-        assert inspector.has_table("themes")
-        assert inspector.has_table("stats")
+    inspector = inspect(session.bind)
+    assert inspector.has_table("cards")
+    assert inspector.has_table("themes")
+    assert inspector.has_table("stats")
 
 
 @then("predefined themes should be inserted")
-def predefined_themes_inserted(test_db_path):  # Pass test_db_path here
-    setup_config(test_db_path)  # Setup config BEFORE getting the session
-    with config.get_session() as session:
-        theme_count = session.query(Theme).count()
-        assert theme_count > 0
+def predefined_themes_inserted(session):
+    theme_count = session.query(Theme).count()
+    assert theme_count > 0
 
 
 @given("the database path is invalid")
@@ -69,8 +56,8 @@ def database_path_invalid():
 
 
 @when("the init_db function is called with an invalid path")
-def init_db_called_invalid_path(invalid_db_path):
-    setup_config(invalid_db_path)
+def init_db_called_invalid_path(database_path_invalid):
+    setup_config(database_path_invalid)
     with pytest.raises(ValueError) as excinfo:
         init_db()
 
@@ -90,17 +77,16 @@ def value_error_should_be_raised(excinfo):
 
 
 @given("the database exists")
-def database_exists(test_db_path):
-    setup_config(test_db_path)
-    init_db()  # Initialize the DB for the "database exists" scenarios
+def database_exists(session):
+    pass  # Database is already initialized by the session fixture
 
 
 @when(
     "the setup_config function is called again with a different path",
     target_fixture="excinfo",
 )
-def setup_config_called_again_different_path(test_db_path):
-    different_path = os.path.join(os.path.dirname(test_db_path), "different_db.db")
+def setup_config_called_again_different_path():
+    different_path = "/different/path/to/database.db"
     with pytest.raises(ValueError) as excinfo:
         setup_config(different_path)
     return excinfo
@@ -122,7 +108,6 @@ def no_error_should_be_raised():
 
 
 @then("no new themes should be inserted")
-def no_new_themes_should_be_inserted():
-    with config.get_session() as session:
-        theme_count = session.query(Theme).count()
-        assert theme_count == 3  # The number of themes should not increase
+def no_new_themes_should_be_inserted(session):
+    theme_count = session.query(Theme).count()
+    assert theme_count == 3  # The number of themes should not increase
