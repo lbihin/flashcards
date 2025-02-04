@@ -17,13 +17,26 @@ Feature: Operations on card probabilities and stats
     When the card with ID 999 with incorrect answer is updated
     Then an error should be logged indicating the card with ID 999 was not found
 
-  Scenario: Successfully update stats
+  Scenario: Successfully update exiting stats with correct answer
     Given the database is initialized
     And stat exist or is created and contain 5 correct answers and 3 incorrect answers
     When the stat is updated with a correct answer
     Then the stat should have 6 correct answers and 3 incorrect answers
 
-  Scenario: Attempt to update stats of a non-existent record
+  Scenario: Successfully update exiting stats with incorrect answer
     Given the database is initialized
-    When the stats with ID 999 are updated to bonnes_reponses 6 and mauvaises_reponses 2
-    Then an error should be logged indicating the stats with ID 999 were not found
+    And stat exist or is created and contain 5 correct answers and 3 incorrect answers
+    When the stat is updated with a incorrect answer
+    Then the stat should have 5 correct answers and 4 incorrect answers
+
+  Scenario: Successfully update new stats with correct answer
+    Given the database is initialized
+    And the daily stat does not exist
+    When the stat is updated with a correct answer
+    Then the stat should have 1 correct answers and 0 incorrect answers
+
+    Scenario: Successfully update new stats with incorrect answer
+    Given the database is initialized
+    And the daily stat does not exist
+    When the stat is updated with a incorrect answer
+    Then the stat should have 0 correct answers and 1 incorrect answers

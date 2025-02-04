@@ -69,3 +69,8 @@ def check_stat_counters(session, positive_answer_cnt, negative_answer_cnt):
     stat = session.query(Stat).filter_by(date=datetime.now().strftime('%Y-%m-%d')).first()
     assert stat.bonnes_reponses == int(positive_answer_cnt)
     assert stat.mauvaises_reponses == int(negative_answer_cnt)
+
+@given('the daily stat does not exist')
+def ensure_no_stats_exists(session):
+    stat = session.query(Stat).filter_by(date=datetime.now().date()).first()
+    assert stat is None
