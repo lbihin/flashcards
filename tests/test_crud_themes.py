@@ -1,9 +1,8 @@
 import pytest
-from pytest_bdd import given, scenarios, then, when, parsers
+from pytest_bdd import given, parsers, scenarios, then, when
 
 from src.db import config
 from src.db.config import setup_config
-from src.db.tables import Theme, init_db
 from src.db.services import (
     create_theme,
     delete_theme,
@@ -11,7 +10,7 @@ from src.db.services import (
     get_theme,
     update_theme,
 )
-
+from src.db.tables import Theme, init_db
 
 scenarios("features/crud_themes.feature")
 

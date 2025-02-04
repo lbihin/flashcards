@@ -3,7 +3,6 @@ from pytest_bdd import given, scenarios, then, when
 
 from src.db import config
 from src.db.config import setup_config
-from src.db.tables import Card, init_db
 from src.db.services import (
     create_card,
     delete_card,
@@ -13,6 +12,7 @@ from src.db.services import (
     get_number_of_cards,
     update_card,
 )
+from src.db.tables import Card, init_db
 
 # Load the feature file
 scenarios("features/crud_cards.feature")

@@ -1,9 +1,5 @@
-import os
-
 import pytest
-from pytest_bdd import given, parsers, scenarios, then, when
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from pytest_bdd import given, scenarios, then, when
 
 from src.db import config
 from src.db.config import setup_config

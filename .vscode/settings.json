@@ -9,4 +9,13 @@
     ],
     "python.envFile": ".env",
     "python.poetryPath": "${env:POETRY_PATH}",
+    "editor.codeActionsOnSave": {
+        "source.unusedImports": "always",
+        "source.organizeImports": "always"
+    },
+    "editor.formatOnSaveMode":"file",
+    "[python]": {
+        "editor.defaultColorDecorators": true,
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    }
 }
