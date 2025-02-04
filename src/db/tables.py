@@ -1,7 +1,9 @@
 import logging
 import os
 
+import sqlalchemy
 from sqlalchemy import (
+    CheckConstraint,
     Column,
     Date,
     Float,
@@ -9,14 +11,11 @@ from sqlalchemy import (
     Integer,
     String,
     text,
-    CheckConstraint,
 )
-import sqlalchemy
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
 from src.db import config
-
 
 Base = declarative_base()
 
@@ -145,15 +144,13 @@ def get_row_by_id(table, id, **kwargs):
     logging.debug(f"Retrieve row in table '{table.__tablename__}' with id={id}.")
     row = session.query(table).filter_by(id=id).first()
     if row is None:
-        logging.debug(
-            f"Row in table '{table.__tablename__}' with filters: id={id}, {kwargs} not found"
-        )
+        logging.error(f"Row in table '{table.__tablename__}' with id={id} not found.")
     return row
 
 
 @get_session
-def get_rows_by(table, **kwargs):
-    """Get rows from a table by filters.
+def get_row_by(table, **kwargs):
+    """Get row from a table by filters.
     :param session: The database session.
     :param table: The table to query.
     :param kwargs: Filters for the query."""
@@ -161,16 +158,14 @@ def get_rows_by(table, **kwargs):
     logging.debug(
         f"Retrieve row in table '{table.__tablename__}' with filters: {kwargs}."
     )
-    query = session.query(table)
     if not kwargs:
         raise ValueError("Filter condition in kwargs is missing")
-    query = query.filter_by(**kwargs)
-    row = query.all()
-    if row is None:
+    rows = session.query(table).filter_by(**kwargs).first()
+    if rows is None:
         logging.debug(
-            f"Row in table '{table.__tablename__}' with filters: {kwargs} not found"
+            f"Row in table '{table.__tablename__}' with filters: {kwargs} not found."
         )
-    return row
+    return rows
 
 
 @get_session
@@ -214,7 +209,10 @@ def get_all_rows(table, **kwargs):
     :param table: The table to query."""
     session = kwargs.pop("session")  # type: sqlalchemy.orm.session.Session
     logging.debug(f"Retrieve all rows in table '{table.__tablename__}'.")
-    return session.query(table).all()
+    query = session.query(table)
+    if kwargs is not None:
+        query = query.filter_by(**kwargs)
+    return query.all()
 
 
 @get_session

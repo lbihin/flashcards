@@ -1,18 +1,22 @@
 import logging
+from datetime import datetime
 from typing import List
 
 from src.db.tables import (
     Card,
+    Stat,
     Theme,
     add_row,
     count_rows,
     delete_row,
     get_all_rows,
+    get_row_by,
     get_row_by_id,
-    get_rows_by,
     update_row,
 )
 
+FACTEUR_PROBA_CORRECT = 0.9
+FACTEUR_PROBA_INCORRECT = 1.1
 
 # --- CRUD operations for the Card entity ---
 
@@ -85,7 +89,7 @@ def get_cards_by_theme(id_theme: int) -> List[Card]:
     """Get all cards by theme.
     :param id_theme: The ID of the theme.
     """
-    return get_rows_by(table=Card, id_theme=id_theme)
+    return get_all_rows(table=Card, id_theme=id_theme)
 
 
 # --- CRUD operations for the Themes entity ---
@@ -123,3 +127,59 @@ def delete_theme(id_theme: int):
 def get_all_themes():
     """Get all themes from the database."""
     return get_all_rows(table=Theme)
+
+
+# --- operations for the Stats entity ---
+
+
+def update_stats(is_correct: bool):
+    """Update the statistics of the user.
+    :param is_correct: Whether the user answered correctly or not."""
+    # Check if the user has an entry today
+    date = datetime.today().date()
+
+    is_created = False
+
+    if stats := get_row_by(table=Stat, date=date):
+        # Update the stats
+        if is_correct:
+            row = update_row(
+                table=Stat, id=stats.id, bonnes_reponses=stats.bonnes_reponses + 1
+            )
+        else:
+            row = update_row(
+                table=Stat, id=stats.id, mauvaises_reponses=stats.mauvaises_reponses + 1
+            )
+    else:
+        # Create a new entry
+        if is_correct:
+            row = add_row(
+                table=Stat, date=date, bonnes_reponses=1, mauvaises_reponses=0
+            )
+        else:
+            row = add_row(
+                table=Stat, date=date, bonnes_reponses=0, mauvaises_reponses=1
+            )
+        is_created = True
+
+    return row, is_created
+
+
+def update_card_probability(card_id: int, is_correct: bool):
+    """Update the probability of a card.
+    :param card_id: The ID of the card.
+    :param is_correct: Whether the user answered correctly or not."""
+    if card := get_card(card_id):
+        fac = FACTEUR_PROBA_CORRECT if is_correct else FACTEUR_PROBA_INCORRECT
+        new_prob = card.probabilite * fac
+
+        # Limit the probability to be between 0.1 and 1.0
+        new_prob = max(0.1, min(new_prob, 1.0))
+
+        update_row(table=Card, id=card_id, probabilite=new_prob)
+        logging.info(f"Card with ID {card_id} probability updated to {new_prob}")
+
+
+def get_stats():
+    """Get the statistics of the user."""
+    pass
