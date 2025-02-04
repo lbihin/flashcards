@@ -182,4 +182,4 @@ def update_card_probability(card_id: int, is_correct: bool):
 
 def get_stats():
     """Get the statistics of the user."""
-    pass
+    return get_all_rows(table=Stat)

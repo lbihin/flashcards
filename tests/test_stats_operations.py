@@ -1,12 +1,13 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+import random
 from typing import Literal
 import pytest
 from pytest_bdd import given, scenarios, parsers, then, when
 
 from src.db import config
 from src.db.config import setup_config
-from src.db.services import create_card, get_card, update_card_probability, update_stats
-from src.db.tables import Stat, add_row, init_db
+from src.db.services import create_card, get_card, get_stats, update_card_probability, update_stats
+from src.db.tables import Stat, add_row, count_rows, init_db
 
 
 scenarios("features/stats_operations.feature")
@@ -55,7 +56,7 @@ def check_error_card_not_found(caplog, card_id):
     )
 
 @given(parsers.parse('stat exist or is created and contain {positive_answer_cnt} correct answers and {negative_answer_cnt} incorrect answers'))
-def ensure_stats_exists(positive_answer_cnt, negative_answer_cnt):
+def ensure_stats_exists_with_predefined_answers(positive_answer_cnt, negative_answer_cnt):
     stat = add_row(table=Stat, date=datetime.today(), bonnes_reponses=int(positive_answer_cnt), mauvaises_reponses=int(negative_answer_cnt))
     assert stat is not None
 
@@ -74,3 +75,18 @@ def check_stat_counters(session, positive_answer_cnt, negative_answer_cnt):
 def ensure_no_stats_exists(session):
     stat = session.query(Stat).filter_by(date=datetime.now().date()).first()
     assert stat is None
+
+@given(parsers.parse('{counter} stats exists'))
+def ensure_stats_exists(counter):
+    for i in range(int(counter)):
+        date = datetime.today() - timedelta(days=i)
+        add_row(table=Stat, date=date, bonnes_reponses=random.randint(1, 10), mauvaises_reponses=random.randint(1, 10))
+    assert count_rows(Stat) == int(counter)
+
+@when('all stats are retrieved', target_fixture='retrieved_cards')
+def retrieve_stats():
+    return get_stats()
+
+@then(parsers.parse('{exp_counter} stats are retrieved'))
+def check_retrieved_stats(retrieved_cards, exp_counter):
+    assert len(retrieved_cards) == int(exp_counter)

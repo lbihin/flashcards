@@ -35,8 +35,14 @@ Feature: Operations on card probabilities and stats
     When the stat is updated with a correct answer
     Then the stat should have 1 correct answers and 0 incorrect answers
 
-    Scenario: Successfully update new stats with incorrect answer
+  Scenario: Successfully update new stats with incorrect answer
     Given the database is initialized
     And the daily stat does not exist
     When the stat is updated with a incorrect answer
     Then the stat should have 0 correct answers and 1 incorrect answers
+
+  Scenario: Get all stats
+    Given the database is initialized
+    And 10 stats exists
+    When all stats are retrieved
+    Then 10 stats are retrieved
