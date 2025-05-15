@@ -1,6 +1,11 @@
 import streamlit as st
 
-from src.db import services
+import src.db.services as services
+from src.db.config import setup_config
+
+
+
+setup_config()
 
 
 def update_statistics(is_correct: bool):
@@ -22,6 +27,7 @@ st.markdown(
     You can also visualize your progress and performance.
     """
 )
+
 
 THEMES = get_themes()
 #
