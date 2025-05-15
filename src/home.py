@@ -12,8 +12,6 @@ st.title("Flashcard Application")
 st.divider()
 
 
-
-
 pages = [
     st.Page("pages/answer_flashcards.py", title="Quizz"),
     st.Page("pages/manage_flashcards.py", title="Configuration"),
