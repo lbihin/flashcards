@@ -7,9 +7,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="auto",
 )
-st.title("Flashcard Application")
-st.divider()
-
 
 pages = [
     st.Page("pages/answer_flashcards.py", title="Quizz"),

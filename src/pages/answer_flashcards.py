@@ -31,12 +31,6 @@ all_themes = services.get_all_themes()
 if "usr_themes" not in st.session_state:
     st.session_state.usr_themes = all_themes
 
-if len(all_themes) == 0:
-    st.warning(
-        "No themes available. Please create a theme first in the configuration page."
-    )
-    st.stop()
-
 
 def update_statistics(is_correct: bool):
     services.update_stats(is_correct)
@@ -65,6 +59,16 @@ def get_card() -> Optional[Card]:
 def reset():
     st.session_state.response_input = ""
     st.session_state.show_response = False
+
+
+st.title("Flashcard Application")
+st.divider()
+
+if len(all_themes) == 0:
+    st.warning(
+        "No themes available. Please create a theme first in the configuration page."
+    )
+    st.stop()
 
 
 # ---- Main ----
