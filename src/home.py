@@ -8,7 +8,6 @@ st.set_page_config(
     initial_sidebar_state="auto",
 )
 st.title("Flashcard Application")
-
 st.divider()
 
 

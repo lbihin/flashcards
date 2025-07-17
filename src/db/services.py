@@ -124,7 +124,7 @@ def delete_theme(id_theme: int):
     logging.info(f"Theme {id_theme} deleted")
 
 
-def get_all_themes():
+def get_all_themes() -> List[Theme]:
     """Get all themes from the database."""
     return get_all_rows(table=Theme)
 
