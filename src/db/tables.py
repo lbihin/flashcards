@@ -30,7 +30,7 @@ class Card(Base):
     question = Column(String)
     reponse = Column(String)
     probabilite = Column(Float)
-    id_theme = Column(Integer, ForeignKey("themes.id", ondelete="RESTRICT"))
+    id_theme = Column(Integer, ForeignKey("themes.id", ondelete="CASCADE"))
 
     theme = relationship("Theme", back_populates="cards")
 
@@ -58,7 +58,7 @@ class Theme(Base):
     id = Column(Integer, primary_key=True)
     theme = Column(String, unique=True)
 
-    cards = relationship("Card", back_populates="theme")
+    cards = relationship("Card", back_populates="theme", cascade="all, delete")
 
 
 class Stat(Base):

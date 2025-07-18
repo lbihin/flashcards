@@ -36,8 +36,12 @@ def cards_to_dataframe(cards: list) -> pd.DataFrame:
 def _common_card_form(
     question_text: str = "", reponse_text: str = "", proba_slider: float = 0.5
 ):
-    question = st.text_input("La question:", question_text)
-    reponse = st.text_input("La réponse", reponse_text)
+    question = st.text_input(
+        "La question:", question_text, placeholder="Entrez votre question..."
+    )
+    reponse = st.text_input(
+        "La réponse:", reponse_text, placeholder="Entrez la réponse"
+    )
     proba = st.slider(
         "Probabilité d´occurence",
         min_value=0.1,
@@ -51,17 +55,24 @@ def _common_card_form(
 def display_new_card_form():
     with st.form("new_card_form", clear_on_submit=True):
         options = [th.theme for th in st.session_state.all_themes]
-        selected_theme = st.selectbox("Le thème", options=options)
+        selected_theme = st.selectbox(
+            "Le thème:",
+            options=options,
+            index=None,
+            accept_new_options=True,
+            placeholder="Choisir ou ajouter un thème",
+        )
         question, reponse, proba = _common_card_form()
 
         if st.form_submit_button("Ajouter"):
             logging.info(f"Request to add new card")
-            id_theme = st.session_state.theme_lookup[selected_theme]
+            theme = services.get_or_create_theme(selected_theme)
+            st.session_state.theme_lookup[selected_theme] = theme.id
             services.create_card(
                 question=question,
                 reponse=reponse,
                 probabilite=proba,
-                id_theme=id_theme,
+                id_theme=theme.id,
             )
             reset()
 
@@ -129,10 +140,6 @@ def display_flascard(id_theme: int):
 def display_theme_form():
     with st.sidebar:
         with st.form("add_therme"):
-            new_theme = st.text_input("Ajouter un theme")
-            if st.form_submit_button("Ajouter"):
-                services.create_theme(theme=new_theme)
-                reset()
             options = [th.theme for th in st.session_state.all_themes]
             selected_theme = st.selectbox("Supprimer un theme", options=options)
             if st.form_submit_button("Supprimer"):

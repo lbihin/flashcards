@@ -108,6 +108,14 @@ def get_theme(id_theme: int):
     return get_row_by_id(table=Theme, id=id_theme)
 
 
+def get_or_create_theme(name: str) -> Theme:
+    """Get a theme by its name. Create it otherwise"""
+    theme = get_row_by(Theme, theme=name)
+    if theme is None:
+        theme = create_theme(name)
+    return theme
+
+
 def update_theme(id_theme: int, theme: str):
     """Update a theme in the database.
     :param id_theme: The ID of the theme.
