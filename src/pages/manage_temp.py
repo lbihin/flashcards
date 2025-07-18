@@ -33,23 +33,53 @@ def cards_to_dataframe(cards: list) -> pd.DataFrame:
     return pd.DataFrame(data)
 
 
+def _common_card_form(
+    question_text: str = "", reponse_text: str = "", proba_slider: float = 0.5
+):
+    question = st.text_input("La question:", question_text)
+    reponse = st.text_input("La réponse", reponse_text)
+    proba = st.slider(
+        "Probabilité d´occurence",
+        min_value=0.1,
+        value=proba_slider,
+        max_value=0.9,
+        step=0.1,
+    )
+    return question, reponse, proba
+
+
+def display_new_card_form():
+    with st.form("new_card_form", clear_on_submit=True):
+        options = [th.theme for th in st.session_state.all_themes]
+        selected_theme = st.selectbox("Le thème", options=options)
+        question, reponse, proba = _common_card_form()
+
+        if st.form_submit_button("Ajouter"):
+            logging.info(f"Request to add new card")
+            id_theme = st.session_state.theme_lookup[selected_theme]
+            services.create_card(
+                question=question,
+                reponse=reponse,
+                probabilite=proba,
+                id_theme=id_theme,
+            )
+            reset()
+
+
 def display_card_details():
 
     card = st.session_state.config_selected_card
 
-    with st.form("card_form"):
-        question = st.text_input("La question:", card.question)
-        reponse = st.text_input("La réponse", card.reponse)
-        proba = st.slider(
-            "Probabilité d´occurence",
-            min_value=0.1,
-            value=card.probabilite,
-            max_value=0.9,
-            step=0.1,
+    with st.form("card_detail_form"):
+
+        question, reponse, proba = _common_card_form(
+            question_text=card.question,
+            reponse_text=card.reponse,
+            proba_slider=card.probabilite,
         )
+
         col_btn_update, col_btn_delete = st.columns(2)
         with col_btn_update:
-
             if st.form_submit_button("Actualiser"):
                 logging.info(f"Request to update card(id={card.id})")
                 services.update_card(
@@ -114,15 +144,20 @@ def display_theme_form():
 # Page layout
 st.title("Configurer les flashcards")
 
+
 # affiche les themes
 st.session_state.all_themes = services.get_all_themes()
 st.session_state.theme_lookup = {
     obj.theme: obj.id for obj in st.session_state.all_themes
 }
 
+with st.expander("Ajouter une question"):
+    display_new_card_form()
+
 display_theme_form()
 
 c_data, c_config = st.columns((3, 2))
+
 
 with c_data:
     options = [th.theme for th in st.session_state.all_themes]
