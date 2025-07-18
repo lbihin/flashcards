@@ -4,19 +4,10 @@ from typing import TYPE_CHECKING, Optional
 import streamlit as st
 
 import src.db.services as services
-from src.db.config import setup_config
 from src.db.tables import Card
 
 if TYPE_CHECKING:
     from src.db.tables import Card
-
-
-if "init_db" not in st.session_state:
-    st.session_state.init_db = False
-
-if not st.session_state.init_db:
-    setup_config()
-    st.session_state.init_db = True
 
 # ---- affichage local texte ou response ---
 if "show_response" not in st.session_state:

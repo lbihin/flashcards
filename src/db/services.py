@@ -2,6 +2,8 @@ import logging
 from datetime import datetime
 from typing import List
 
+from sqlalchemy.orm import joinedload
+
 from src.db.tables import (
     Card,
     Stat,
@@ -86,10 +88,8 @@ def get_number_of_cards() -> int:
 
 
 def get_cards_by_theme(id_theme: int) -> List[Card]:
-    """Get all cards by theme.
-    :param id_theme: The ID of the theme.
-    """
-    return get_all_rows(table=Card, id_theme=id_theme)
+    """Get all cards by theme, with the theme relationship loaded."""
+    return get_all_rows(table=Card, id_theme=id_theme, options=[joinedload(Card.theme)])
 
 
 # --- CRUD operations for the Themes entity ---

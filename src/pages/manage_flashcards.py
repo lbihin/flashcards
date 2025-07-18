@@ -18,7 +18,10 @@ if "selected_card_id" not in st.session_state:
 if "edit_mode" not in st.session_state:
     st.session_state.edit_mode = {"theme": False, "card": False}
 
-
+with st.sidebar:
+    with st.form("new_theme"):
+        st.text_input("Ajouter un thème")
+        st.form_submit_button("Ajouter")
 # Callbacks
 def select_theme(theme_id):
     st.session_state.selected_theme_id = theme_id

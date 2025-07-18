@@ -1,3 +1,4 @@
+import logging
 import os
 from contextlib import contextmanager
 
@@ -27,6 +28,7 @@ def setup_config(path: str | None = None):
     global engine
     engine = create_engine(f"sqlite:///{DATABASE_PATH}", echo=False)
     engine_initialized = True
+    logging.debug("Database configuration initialized.")
 
 
 @contextmanager

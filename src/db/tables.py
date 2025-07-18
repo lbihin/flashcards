@@ -19,6 +19,8 @@ from src.db import config
 
 Base = declarative_base()
 
+logging.debug("Database tables module loaded.")
+
 
 # Define the tables
 class Card(Base):
@@ -37,6 +39,17 @@ class Card(Base):
             "probabilite >= 0.1 AND probabilite <= 1", name="probabilite_range"
         ),
     )
+
+    def to_dict(self) -> dict:
+        """Convert the Card object to a dictionary."""
+        return {
+            "id": self.id,
+            "question": self.question,
+            "reponse": self.reponse,
+            "probabilite": self.probabilite,
+            "id_theme": self.id_theme,
+            "theme": (self.theme.theme if self.theme else None),
+        }
 
 
 class Theme(Base):
@@ -203,14 +216,15 @@ def delete_row(table, id, **kwargs):
 
 
 @get_session
-def get_all_rows(table, **kwargs):
-    """Get all rows from a table.
-    :param session: The database session.
-    :param table: The table to query."""
+def get_all_rows(table, options=None, **kwargs):
+    """Get all rows from a table with optional query options."""
     session = kwargs.pop("session")  # type: sqlalchemy.orm.session.Session
     logging.debug(f"Retrieve all rows in table '{table.__tablename__}'.")
     query = session.query(table)
-    if kwargs is not None:
+    if options:
+        for option in options:
+            query = query.options(option)
+    if kwargs:
         query = query.filter_by(**kwargs)
     return query.all()
 
