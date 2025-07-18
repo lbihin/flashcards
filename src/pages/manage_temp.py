@@ -1,4 +1,5 @@
 import logging
+
 import pandas as pd
 import streamlit as st
 
@@ -8,8 +9,19 @@ from src.db import services
 if "config_selected_card" not in st.session_state:
     st.session_state.config_selected_card = None
 
+if "all_themes" not in st.session_state:
+    st.session_state.all_themes = []
+
+if "theme_lookup" not in st.session_state:
+    st.session_state.theme_lookup = dict()
+
+
 def reset():
     st.session_state.config_selected_card = None
+    st.session_state.all_themes = services.get_all_themes()
+    st.session_state.theme_lookup = {
+        obj.theme: obj.id for obj in st.session_state.all_themes
+    }
     st.rerun()
 
 
@@ -57,6 +69,7 @@ def display_card_details():
                 services.delete_card(card.id)
                 reset()
 
+
 def display_flascard(id_theme: int):
     logging.debug("Start to display flascard.")
     cards = services.get_cards_by_theme(id_theme=id_theme)
@@ -69,8 +82,6 @@ def display_flascard(id_theme: int):
     header_cols[0].write("**Question**")
     header_cols[1].write("**Réponse**")
     header_cols[2].write("**Occurence (en %)**")
-
-    selected_card = None  # Variable pour stocker la carte sélectionnée
 
     for card in cards:
         with st.container():
@@ -85,19 +96,36 @@ def display_flascard(id_theme: int):
                 logging.info(f"Card avec id={card.id}")
 
 
+def display_theme_form():
+    with st.sidebar:
+        with st.form("add_therme"):
+            new_theme = st.text_input("Ajouter un theme")
+            if st.form_submit_button("Ajouter"):
+                services.create_theme(theme=new_theme)
+                reset()
+            options = [th.theme for th in st.session_state.all_themes]
+            selected_theme = st.selectbox("Supprimer un theme", options=options)
+            if st.form_submit_button("Supprimer"):
+                theme_id = st.session_state.theme_lookup[selected_theme]
+                services.delete_theme(id_theme=theme_id)
+                reset()
+
+
 # Page layout
 st.title("Configurer les flashcards")
 
 # affiche les themes
-all_themes = services.get_all_themes()
+st.session_state.all_themes = services.get_all_themes()
+st.session_state.theme_lookup = {
+    obj.theme: obj.id for obj in st.session_state.all_themes
+}
 
-lookup_themes = {obj.theme: obj.id for obj in all_themes}
-
+display_theme_form()
 
 c_data, c_config = st.columns((3, 2))
 
 with c_data:
-    options = [th.theme for th in all_themes]
+    options = [th.theme for th in st.session_state.all_themes]
     selection = st.pills(
         "Sélectionner le thème à afficher",
         options,
@@ -108,7 +136,7 @@ with c_data:
         st.warning("Aucun Thème n´est présent dans la banque de donnée...")
         st.stop()
 
-    display_flascard(lookup_themes[selection])
+    display_flascard(st.session_state.theme_lookup[selection])
 
 if st.session_state.config_selected_card:
     with c_config:
