@@ -216,8 +216,8 @@ def delete_row(table, id, **kwargs):
 
 
 @get_session
-def get_all_rows(table, options=None, **kwargs):
-    """Get all rows from a table with optional query options."""
+def get_all_rows(table, options=None, filters=None, **kwargs):
+    """Get all rows from a table with optional query options and filters."""
     session = kwargs.pop("session")  # type: sqlalchemy.orm.session.Session
     logging.debug(f"Retrieve all rows in table '{table.__tablename__}'.")
     query = session.query(table)
@@ -226,6 +226,8 @@ def get_all_rows(table, options=None, **kwargs):
             query = query.options(option)
     if kwargs:
         query = query.filter_by(**kwargs)
+    if filters is not None:
+        query = query.filter(filters)
     return query.all()
 
 

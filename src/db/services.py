@@ -1,7 +1,8 @@
 import logging
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
+from sqlalchemy import and_
 from sqlalchemy.orm import joinedload
 
 from src.db.tables import (
@@ -188,6 +189,19 @@ def update_card_probability(card_id: int, is_correct: bool):
         logging.info(f"Card with ID {card_id} probability updated to {new_prob}")
 
 
-def get_stats():
-    """Get the statistics of the user."""
-    return get_all_rows(table=Stat)
+def get_stats(
+    start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
+) -> List[Stat]:
+    """Get the statistics of the user.
+    :param start_date: The start date
+    :param end_date: The end date
+    """
+    filters = []
+
+    if start_date:
+        filters.append(Stat.date >= start_date)
+    if end_date:
+        filters.append(Stat.date <= end_date)
+
+    # Utilisez get_all_rows avec les filtres
+    return get_all_rows(table=Stat, filters=and_(*filters) if filters else None)
