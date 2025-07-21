@@ -33,8 +33,8 @@ else:
 
 stats = services.get_stats(start_date=start_date, end_date=end_date)
 
-if stats:
-    # Préparer les données pour les graphiques
+
+def prepare_data(stats):
     data = [
         {
             "date": stat.date,
@@ -43,8 +43,6 @@ if stats:
         }
         for stat in stats
     ]
-
-    # Graphique circulaire (pie chart)
     pie_data = {
         "Réponses": ["Bonnes réponses", "Mauvaises réponses"],
         "Nombre": [
@@ -52,13 +50,23 @@ if stats:
             sum(d["mauvaises_reponses"] for d in data),
         ],
     }
+    return data, pie_data
+
+
+if stats:
+    # Préparer les données pour les graphiques
+    data, pie_data = prepare_data(stats)
+
+    COLOR_MAP = {"Bonnes réponses": "green", "Mauvaises réponses": "red"}
+
+    # Graphique circulaire (pie chart)
     pie_fig = px.pie(
         pie_data,
         names="Réponses",
         values="Nombre",
         title="Répartition des réponses",
         color="Réponses",
-        color_discrete_map={"Bonnes réponses": "green", "Mauvaises réponses": "red"},
+        color_discrete_map=COLOR_MAP,
     )
     pie_fig.update_layout(
         legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5)
@@ -71,7 +79,7 @@ if stats:
         y=["bonnes_reponses", "mauvaises_reponses"],
         labels={"value": "Nombre de réponses", "variable": "Type de réponse"},
         title="Évolution des réponses par date",
-        color_discrete_map={"bonnes_reponses": "green", "mauvaises_reponses": "red"},
+        color_discrete_map=COLOR_MAP,
     )
     # line_fig.update_layout(
     #     legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5)
@@ -86,4 +94,6 @@ if stats:
     c_pie.plotly_chart(pie_fig, use_container_width=True)
     c_scatter.plotly_chart(line_fig, use_container_width=True)
 else:
-    st.write("Aucune donnée disponible pour la période sélectionnée.")
+    st.warning(
+        "Aucune donnée n'a été trouvée pour la période sélectionnée. Essayez une autre période."
+    )
