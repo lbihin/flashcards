@@ -11,11 +11,11 @@ LAST_MONTH = "Dernier mois"
 THIS_YEAR = "Cette année"
 PERIODS = [TODAY, LAST_5_DAY, LAST_MONTH, THIS_YEAR]
 
-st.title("Rapport d´activité")
+st.title("Rapport d´activités")
 st.divider()
 
 
-period_selection = st.segmented_control("Selectionner une période:", PERIODS)
+period_selection = st.segmented_control("Selectionner une période:", PERIODS, default=LAST_5_DAY)
 
 today = datetime.datetime.today()
 datetime.timedelta()
