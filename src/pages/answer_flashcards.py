@@ -100,7 +100,7 @@ with st.container(border=True):
         st.text_area(
             "Votre réponse",
             placeholder="Entrez votre réponse ici...",
-            height=150,
+            height="content",
             key="response_input",
         )
         st.button(
