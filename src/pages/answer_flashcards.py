@@ -23,8 +23,9 @@ if "usr_themes" not in st.session_state:
     st.session_state.usr_themes = all_themes
 
 
-def update_statistics(is_correct: bool):
+def update_statistics(card: Card, is_correct: bool):
     services.update_stats(is_correct)
+    services.update_card_probability(card_id=card.id, is_correct=is_correct)
     st.toast("Les statistiques ont été actualisé avec succès!")
     reset()
 
@@ -141,13 +142,13 @@ with st.container(border=True):
             "Oui",
             use_container_width=True,
             on_click=update_statistics,
-            kwargs={"is_correct": True},
+            kwargs={"card": card, "is_correct": True},
         )
         c_non.button(
             "Non",
             use_container_width=True,
             on_click=update_statistics,
-            kwargs={"is_correct": False},
+            kwargs={"card": card, "is_correct": False},
         )
 
 
