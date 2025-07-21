@@ -72,22 +72,38 @@ if stats:
         legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5)
     )
 
+    # Préparer les données pour le graphique linéaire avec des noms correspondant à COLOR_MAP
+    line_data = [
+        {
+            "date": d["date"],
+            "Type de réponse": "Bonnes réponses",
+            "Nombre": d["bonnes_reponses"],
+        }
+        for d in data
+    ] + [
+        {
+            "date": d["date"],
+            "Type de réponse": "Mauvaises réponses",
+            "Nombre": d["mauvaises_reponses"],
+        }
+        for d in data
+    ]
+
     # Graphique linéaire (line chart)
     line_fig = px.line(
-        data,
+        line_data,
         x="date",
-        y=["bonnes_reponses", "mauvaises_reponses"],
-        labels={"value": "Nombre de réponses", "variable": "Type de réponse"},
+        y="Nombre",
+        color="Type de réponse",
+        labels={"Nombre": "Nombre de réponses", "Type de réponse": "Type de réponse"},
         title="Évolution des réponses par date",
         color_discrete_map=COLOR_MAP,
     )
-    # line_fig.update_layout(
-    #     legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5)
-    # )
+
     line_fig.update_xaxes(
-        tickangle=45,  # Incline les étiquettes à 45 degrés
-        tickformat="%Y-%m-%d",  # Affiche uniquement les dates (année-mois-jour)
-        title_text="Date",  # Ajoute un titre à l'axe X
+        tickangle=45,
+        tickformat="%Y-%m-%d",
+        title_text="Date",
     )
 
     c_pie, c_scatter = st.columns((2, 3))
