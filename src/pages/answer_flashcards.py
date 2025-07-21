@@ -100,16 +100,14 @@ with st.container(border=True):
         st.text_area(
             "Votre réponse",
             placeholder="Entrez votre réponse ici...",
-            height=150,
-            key="response_input",  # Use a separate key for the widget
+            height="content",
+            key="response_input",
         )
         st.button(
             "Valider",
             on_click=submit_response,
             disabled=st.session_state.response_input == "",
         )
-        # if st.button("Valider"):
-        #     st.session_state.show_response = True
 
     if st.session_state.show_response:
         c_user, c_db = st.columns(2)
@@ -150,33 +148,3 @@ with st.container(border=True):
             on_click=update_statistics,
             kwargs={"card": card, "is_correct": False},
         )
-
-
-# if st.session_state.usr_answer != "":
-
-#     usr_content_column, dbs_content_column = st.columns(2, border=True, gap="medium")
-
-#     with usr_content_column:
-#         st.write(st.session_state["usr_answer"])
-#         feedback_columns = st.columns(2, gap="small")
-#         feedback_columns[0].button(
-#             "Yes! I´m right.",
-#             icon="✅",
-#             key="correct_answer",
-#             use_container_width=True,
-#             help="Your answer is correct",
-#             on_click=update_statistics,
-#             kwargs={"is_correct": True},
-#         )
-
-#         feedback_columns[1].button(
-#             "Oh no! I´m wrong",
-#             icon="❌",
-#             key="wrong_answer",
-#             use_container_width=True,
-#             help="Your answer is wrong",
-#             on_click=update_statistics,
-#             kwargs={"is_correct": False},
-#         )
-
-#     dbs_content_column.write("PLACEHOLDER FOR ANSWER CHECKING")

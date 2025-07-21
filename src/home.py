@@ -20,8 +20,8 @@ st.set_page_config(
 with st.sidebar:
     pages = [
         st.Page("pages/answer_flashcards.py", title="Quizz"),
-        st.Page("pages/manage_flashcards.py", title="Configuration"),
         st.Page("pages/manage_display.py", title="Report"),
+        st.Page("pages/manage_flashcards.py", title="Configuration"),
     ]
 
     pg = st.navigation(pages=pages)

@@ -11,11 +11,11 @@ LAST_MONTH = "Dernier mois"
 THIS_YEAR = "Cette année"
 PERIODS = [TODAY, LAST_5_DAY, LAST_MONTH, THIS_YEAR]
 
-st.title("Rapport d´activité")
+st.title("Rapport d´activités")
 st.divider()
 
 
-period_selection = st.segmented_control("Selectionner une période:", PERIODS)
+period_selection = st.segmented_control("Selectionner une période:", PERIODS, default=LAST_5_DAY)
 
 today = datetime.datetime.today()
 datetime.timedelta()
@@ -33,8 +33,8 @@ else:
 
 stats = services.get_stats(start_date=start_date, end_date=end_date)
 
-if stats:
-    # Préparer les données pour les graphiques
+
+def prepare_data(stats):
     data = [
         {
             "date": stat.date,
@@ -43,8 +43,6 @@ if stats:
         }
         for stat in stats
     ]
-
-    # Graphique circulaire (pie chart)
     pie_data = {
         "Réponses": ["Bonnes réponses", "Mauvaises réponses"],
         "Nombre": [
@@ -52,38 +50,66 @@ if stats:
             sum(d["mauvaises_reponses"] for d in data),
         ],
     }
+    return data, pie_data
+
+
+if stats:
+    # Préparer les données pour les graphiques
+    data, pie_data = prepare_data(stats)
+
+    COLOR_MAP = {"Bonnes réponses": "green", "Mauvaises réponses": "red"}
+
+    # Graphique circulaire (pie chart)
     pie_fig = px.pie(
         pie_data,
         names="Réponses",
         values="Nombre",
         title="Répartition des réponses",
         color="Réponses",
-        color_discrete_map={"Bonnes réponses": "green", "Mauvaises réponses": "red"},
+        color_discrete_map=COLOR_MAP,
     )
     pie_fig.update_layout(
         legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5)
     )
 
+    # Préparer les données pour le graphique linéaire avec des noms correspondant à COLOR_MAP
+    line_data = [
+        {
+            "date": d["date"],
+            "Type de réponse": "Bonnes réponses",
+            "Nombre": d["bonnes_reponses"],
+        }
+        for d in data
+    ] + [
+        {
+            "date": d["date"],
+            "Type de réponse": "Mauvaises réponses",
+            "Nombre": d["mauvaises_reponses"],
+        }
+        for d in data
+    ]
+
     # Graphique linéaire (line chart)
     line_fig = px.line(
-        data,
+        line_data,
         x="date",
-        y=["bonnes_reponses", "mauvaises_reponses"],
-        labels={"value": "Nombre de réponses", "variable": "Type de réponse"},
+        y="Nombre",
+        color="Type de réponse",
+        labels={"Nombre": "Nombre de réponses", "Type de réponse": "Type de réponse"},
         title="Évolution des réponses par date",
-        color_discrete_map={"bonnes_reponses": "green", "mauvaises_reponses": "red"},
+        color_discrete_map=COLOR_MAP,
     )
-    # line_fig.update_layout(
-    #     legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5)
-    # )
+
     line_fig.update_xaxes(
-        tickangle=45,  # Incline les étiquettes à 45 degrés
-        tickformat="%Y-%m-%d",  # Affiche uniquement les dates (année-mois-jour)
-        title_text="Date",  # Ajoute un titre à l'axe X
+        tickangle=45,
+        tickformat="%Y-%m-%d",
+        title_text="Date",
     )
 
     c_pie, c_scatter = st.columns((2, 3))
     c_pie.plotly_chart(pie_fig, use_container_width=True)
     c_scatter.plotly_chart(line_fig, use_container_width=True)
 else:
-    st.write("Aucune donnée disponible pour la période sélectionnée.")
+    st.warning(
+        "Aucune donnée n'a été trouvée pour la période sélectionnée. Essayez une autre période."
+    )
